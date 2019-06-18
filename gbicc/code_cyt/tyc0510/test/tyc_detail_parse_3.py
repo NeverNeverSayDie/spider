@@ -222,7 +222,7 @@ class TycDetailParse(object):
                         address_2 = df.loc[addr].values[1]
                         address_3 = df.loc[addr].values[2]
                 
-                    businessScope = try_and_text("variable[10].xpath('./td[2]')[0].xpath('string(.)')", trs1)
+                    businessScope = replace_special_string(try_and_text("variable[10].xpath('./td[2]')[0].xpath('string(.)')", trs1))
                     baseinfo.businessScope = businessScope.replace(
                         "'", '') if businessScope else 'NA'
                 
@@ -970,7 +970,7 @@ class TycDetailParse(object):
                 tds = tr.xpath("./td")
                 if tds:
                     flss.judgment_date = try_and_text("variable[1].xpath('./span/text()')[0]", tds)
-                    flss.judgment_document = try_and_text("variable[2].xpath('./a/text()')[0]", tds)
+                    # flss.judgment_document = try_and_text("variable[2].xpath('./a/text()')[0]", tds)
                 
                     tds_href = try_and_text("variable[2].xpath('./a/@href')[0]", tds)
                     flss.judgment_name = try_and_text("variable[2].xpath('./a//text()')[0]", tds)
@@ -978,9 +978,20 @@ class TycDetailParse(object):
                     flss.document_url = tds_href if tds_href else 'NA'
                     case_type = try_and_text("variable[3].xpath('./span/text()')", tds)
                     flss.case_type = case_type[0] if case_type else 'NA'
-                    case_identity = try_and_text("variable[4].xpath('.//text()')", tds)
-                    flss.case_identity = ','.join(
-                        case_identity) if case_identity else 'NA'
+                    # case_identity = try_and_text("variable[4].xpath('.//text()')", tds)
+                    # flss.case_identity = ','.join(
+                    #     case_identity) if case_identity else 'NA'
+                    s1 = s2 = ''
+                    plaintiff = try_and_text("variable[4].xpath('./div[position()=1]//text()')", tds)
+                    defendant = try_and_text("variable[4].xpath('./div[position()=2]//text()')", tds)
+                    if len(plaintiff) != 0:
+                        for i in plaintiff:
+                            s1 += i
+                    if len(defendant) != 0:
+                        for j in defendant:
+                            s2 += j
+                    flss.case_identity = s1 + ';' + s2
+
                     case_number = try_and_text("variable[5].xpath('./span/text()')", tds)
                     flss.case_number = case_number[0] if case_number else 'NA'
                     flss.txt_id = self.txtId
@@ -999,7 +1010,7 @@ class TycDetailParse(object):
                     except BaseException:
                         pass
                 
-                    flss.text_info = replace_special_string(text_info)
+                    flss.judgment_document = replace_special_string(text_info)
                     value_list = [
                         flss.txt_id,
                         flss.company_name,
@@ -1010,7 +1021,6 @@ class TycDetailParse(object):
                         flss.case_identity,
                         flss.case_number,
                         flss.document_url,
-                        flss.text_info,
                         flss.mark,
                         flss.detail_status,
                         flss.agency_num,
@@ -1922,7 +1932,7 @@ class TycDetailParse(object):
                 coreTeam.personName = personName
             
                 coreTeam.position = try_and_text("variable[2].xpath('.//text()')[0]", tds)
-                personInfo = try_and_text("variable[3].xpath('./div/div/text()')[0]", tds)
+                personInfo = replace_special_string(try_and_text("variable[3].xpath('./div/div/text()')[0]", tds))
             
                 coreTeam.personInfo = ''.join(personInfo)
                 coreTeam.txtId = self.txtId
